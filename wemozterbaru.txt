@@ -3,6 +3,7 @@
 #include "base64.h"
 #include <WiFiClient.h>
 #include <Servo.h>
+#include <Arduino_JSON.h>
 
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -84,6 +85,75 @@ void setup() {
 }
  
 void loop() {
+HTTPClient http;
+
+  const char* serverName = "http://smartdam.oneprocyber.com/bendungan.json";
+String sensorReadings;
+float sensorReadingsArr[3];
+
+sensorReadings = httpGETRequest(serverName);
+      Serial.println(sensorReadings);
+      JSONVar myObject = JSON.parse(sensorReadings);
+      
+      // JSON.typeof(jsonVar) can be used to get the type of the var
+      if (JSON.typeof(myObject) == "undefined") {
+        Serial.println("Parsing input failed!");
+        return;
+      }
+
+ Serial.print("JSON object = ");
+      Serial.println(myObject);
+    
+      // myObject.keys() can be used to get an array of all the keys in the object
+      
+      Serial.print("keys:");
+      String keys = myObject[0]["status_bendungan"]; // "room1"
+      Serial.println(keys);
+     
+
+if(keys == "1"){
+
+
+           for (pos = 0; pos <= 45; pos += 1) { // goes from 0 degrees to 180 degrees
+          // in steps of 1 degree
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(15);                       // waits 15ms for the servo to reach the position
+        }
+        
+ for (pos = 45; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(30);                       // waits 15ms for the servo to reach the position
+        }  
+        
+}else if(keys =="2"){
+ 
+         
+         for (pos = 0; pos <= 90; pos += 1) { // goes from 0 degrees to 180 degrees
+          // in steps of 1 degree
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(15);                       // waits 15ms for the servo to reach the position
+        }
+
+         for (pos = 90; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(30);                       // waits 15ms for the servo to reach the position
+        }  
+
+}else if(keys =="3"){
+  
+
+      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+          // in steps of 1 degree
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(15);                       // waits 15ms for the servo to reach the position
+        }
+         for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(30);                       // waits 15ms for the servo to reach the position
+        }  
+
+}else{
+  
 
 
 digitalWrite(trig_pin, HIGH);
@@ -333,10 +403,7 @@ digitalWrite(trig_pin, HIGH);
 
 
       
-    for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-          myservo.write(pos);              // tell servo to go to position in variable 'pos'
-          delay(30);                       // waits 15ms for the servo to reach the position
-        }
+
 
 
       
@@ -347,6 +414,10 @@ digitalWrite(trig_pin, HIGH);
           delay(15);                       // waits 15ms for the servo to reach the position
         }
 
+    for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+          myservo.write(pos);              // tell servo to go to position in variable 'pos'
+          delay(30);                       // waits 15ms for the servo to reach the position
+        }
       
      
 
@@ -355,5 +426,35 @@ digitalWrite(trig_pin, HIGH);
      
   }
   delay(500);
- 
+ }
+}
+
+String httpGETRequest(String serverName) {
+  WiFiClient client;
+  HTTPClient http;
+    
+  // Your Domain name with URL path or IP address with path
+  http.begin(client, serverName);
+  
+  // If you need Node-RED/server authentication, insert user and password below
+  //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
+  
+  // Send HTTP POST request
+  int httpResponseCode = http.GET();
+  
+  String payload = "{}"; 
+  
+  if (httpResponseCode>0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    payload = http.getString();
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+  }
+  // Free resources
+  http.end();
+
+  return payload;
 }
